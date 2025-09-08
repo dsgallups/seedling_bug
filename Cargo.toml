@@ -3,6 +3,30 @@ name = "seedling_bug"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = ["midix_soundfont_synth"]
+
 [dependencies]
 bevy = "0.16.1"
 bevy_seedling = "0.5.2"
+firewheel = "0.7.2"
+midix_soundfont_synth = {path = "midix_soundfont_synth"}
+midix.workspace = true
+thiserror = "2.0.16"
+
+
+[workspace.lints.clippy]
+# Bevy supplies arguments to systems via dependency injection, so it's natural for systems to
+# request more than 7 arguments, which would undesirably trigger this lint.
+too_many_arguments = "allow"
+# Queries may access many components, which would undesirably trigger this lint.
+type_complexity = "allow"
+# Make sure macros use their standard braces, such as `[]` for `bevy_ecs::children!`.
+nonstandard_macro_braces = "warn"
+double-parens = "allow"
+
+[workspace.dependencies]
+midix = { git = "https://github.com/dsgallups/midix", branch = "refactor-bevy", default-features = false, features = [
+    "std",
+    "bevy",
+] }

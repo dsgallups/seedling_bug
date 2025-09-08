@@ -2979,6 +2979,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "midix"
+version = "4.0.0-alpha"
+source = "git+https://github.com/dsgallups/midix?branch=refactor-bevy#678d8e40301a872517a531d368a9c0670a932da6"
+dependencies = [
+ "bevy",
+ "bevy_platform",
+ "crossbeam-channel",
+ "num_enum",
+ "thiserror 2.0.16",
+]
+
+[[package]]
+name = "midix_soundfont_synth"
+version = "0.1.0"
+dependencies = [
+ "bevy_platform",
+ "midix",
+ "tracing",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4108,6 +4129,10 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_seedling",
+ "firewheel",
+ "midix",
+ "midix_soundfont_synth",
+ "thiserror 2.0.16",
 ]
 
 [[package]]

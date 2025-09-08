@@ -1,6 +1,7 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, time::common_conditions::on_timer};
+use bevy_seedling::node::{FirewheelNode, RegisterNode};
 use firewheel::{
     channel_config::{ChannelConfig, ChannelCount},
     event::ProcEvents,
@@ -12,8 +13,59 @@ use firewheel::{
 use midix::prelude::*;
 use midix_soundfont_synth::prelude::*;
 
+use crate::{
+    player::{SynthCommands, SynthPlayer},
+    soundfont::SoundFontAsset,
+};
+
+mod player;
+mod soundfont;
+
 fn main() {
     let mut app = App::new();
+    app.add_plugins(DefaultPlugins);
+    //intentionally registering a simple node
+    app.register_simple_node::<MidiSynthNode>();
+
+    app.add_systems(Startup, spawn_player).add_systems(
+        Update,
+        play_tone.run_if(on_timer(Duration::from_millis(800))),
+    );
+}
+
+fn spawn_player(mut commands: Commands, assets: Res<AssetServer>) {
+    commands.spawn((
+        SynthPlayer(assets.load("8bitsf.sf2")),
+        SynthCommands::default(),
+    ));
+}
+
+/// System that spawns MIDI synthesizer nodes for entities with soundfonts
+///
+/// once the soundfont has loaded.
+fn ready_midi_player(
+    mut commands: Commands,
+    soundfont_assets: Res<Assets<SoundFontAsset>>,
+    query: Query<(Entity, &SynthPlayer), (Without<FirewheelNode>, With<SynthCommands>)>,
+) {
+    for (entity, soundfont) in &query {
+        // Check if soundfont is loaded
+        let Some(soundfont_asset) = soundfont_assets.get(&soundfont.0) else {
+            continue;
+        };
+
+        // Get config or use defaults
+
+        let node = MidiSynthNode::new(Arc::clone(&soundfont_asset.file), true);
+
+        // Add the node and its configuration to the entity
+        // bevy_seedling will automatically handle node creation and connection
+        commands.entity(entity).insert(node);
+    }
+}
+
+fn play_tone() {
+    //todo
 }
 
 /// Configuration for the MIDI synthesizer node
