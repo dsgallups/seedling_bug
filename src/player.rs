@@ -21,11 +21,6 @@ impl SynthCommands {
         self.queue.push(command);
     }
 
-    /// Add multiple MIDI commands to the queue
-    pub fn send_batch(&mut self, commands: impl IntoIterator<Item = ChannelVoiceMessage>) {
-        self.queue.extend(commands);
-    }
-
     /// Take all commands, leaving the queue empty
     pub fn take(&mut self) -> Vec<ChannelVoiceMessage> {
         std::mem::take(&mut self.queue)

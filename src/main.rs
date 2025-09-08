@@ -29,6 +29,7 @@ mod soundfont;
 fn main() -> AppExit {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, SeedlingPlugin::default(), soundfont::plugin));
+
     //intentionally registering a simple node
     app.register_simple_node::<MidiSynthNode>();
 
