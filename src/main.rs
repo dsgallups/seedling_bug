@@ -1,10 +1,15 @@
 use std::{sync::Arc, time::Duration};
 
 use bevy::{prelude::*, time::common_conditions::on_timer};
-use bevy_seedling::node::{FirewheelNode, RegisterNode};
+use bevy_seedling::{
+    SeedlingPlugin,
+    node::{FirewheelNode, RegisterNode},
+    prelude::AudioEvents,
+};
 use firewheel::{
     channel_config::{ChannelConfig, ChannelCount},
-    event::ProcEvents,
+    diff::EventQueue,
+    event::{NodeEventType, ProcEvents},
     node::{
         AudioNode, AudioNodeInfo, AudioNodeProcessor, ConstructProcessorContext, EmptyConfig,
         ProcBuffers, ProcExtra, ProcInfo, ProcessStatus,
@@ -21,16 +26,22 @@ use crate::{
 mod player;
 mod soundfont;
 
-fn main() {
+fn main() -> AppExit {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins((DefaultPlugins, SeedlingPlugin::default(), soundfont::plugin));
     //intentionally registering a simple node
     app.register_simple_node::<MidiSynthNode>();
 
     app.add_systems(Startup, spawn_player).add_systems(
         Update,
-        play_tone.run_if(on_timer(Duration::from_millis(800))),
+        (
+            ready_midi_player,
+            process_midi_commands,
+            play_tone.run_if(on_timer(Duration::from_millis(800))),
+        ),
     );
+
+    app.run()
 }
 
 fn spawn_player(mut commands: Commands, assets: Res<AssetServer>) {
@@ -38,6 +49,26 @@ fn spawn_player(mut commands: Commands, assets: Res<AssetServer>) {
         SynthPlayer(assets.load("8bitsf.sf2")),
         SynthCommands::default(),
     ));
+}
+
+fn play_tone(nodes: Query<&mut SynthCommands>, mut enable: Local<bool>) {
+    let msg = if *enable {
+        ChannelVoiceMessage::new(
+            Channel::One,
+            VoiceEvent::note_on(key!(C, 3), Velocity::new_unchecked(60)),
+        )
+    } else {
+        ChannelVoiceMessage::new(
+            Channel::One,
+            VoiceEvent::note_off(key!(C, 3), Velocity::new_unchecked(0)),
+        )
+    };
+
+    for mut node in nodes {
+        info!("MESSAGE SENT TO NODE!");
+        node.send(msg);
+    }
+    *enable = !*enable;
 }
 
 /// System that spawns MIDI synthesizer nodes for entities with soundfonts
@@ -64,8 +95,21 @@ fn ready_midi_player(
     }
 }
 
-fn play_tone() {
-    //todo
+/// System that processes MIDI commands and sends them to the audio nodes
+fn process_midi_commands(mut query: Query<(&FirewheelNode, &mut SynthCommands, &mut AudioEvents)>) {
+    for (_, mut commands, mut events) in &mut query {
+        if commands.queue.is_empty() {
+            continue;
+        }
+
+        // Take all pending commands
+        let pending = commands.take();
+
+        // Send commands to the audio node as custom events
+        for command in pending {
+            events.push(NodeEventType::custom(command));
+        }
+    }
 }
 
 /// Configuration for the MIDI synthesizer node

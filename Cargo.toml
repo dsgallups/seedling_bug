@@ -14,8 +14,13 @@ midix_soundfont_synth = {path = "midix_soundfont_synth"}
 midix.workspace = true
 thiserror = "2.0.16"
 
+[profile.dev]
+opt-level = 1
 
-[workspace.lints.clippy]
+[profile.dev.package."*"]
+opt-level = 3
+
+[lints.clippy]
 # Bevy supplies arguments to systems via dependency injection, so it's natural for systems to
 # request more than 7 arguments, which would undesirably trigger this lint.
 too_many_arguments = "allow"
