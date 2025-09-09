@@ -192,7 +192,10 @@ impl AudioNodeProcessor for MidiSynthProcessor {
                 self.process_message(*message);
             }
         }
-        info!("called process, {message_received}");
+
+        if message_received {
+            panic!("Message was succesfully received!");
+        }
 
         let frames = info.frames;
 
