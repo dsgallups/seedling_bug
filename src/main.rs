@@ -4,10 +4,7 @@ use bevy::{
     prelude::*,
     time::common_conditions::{once_after_delay, repeating_after_delay},
 };
-use bevy_seedling::{
-    pool::{Sampler, SamplerOf},
-    prelude::*,
-};
+use bevy_seedling::{pool::Sampler, prelude::*};
 
 fn main() -> AppExit {
     let mut app = App::new();
@@ -49,11 +46,12 @@ fn restart(mut settings: Single<&mut PlaybackSettings>) {
 
 fn toggle_play(mut player: Query<(&Sampler, &mut PlaybackSettings)>) {
     info!("Toggling playback!");
-    let (sampler, mut settings) = player.single_mut().unwrap();
+    //panics
+    let (_sampler, _settings) = player.single_mut().unwrap();
 
-    if sampler.is_playing() {
-        settings.pause();
-    } else {
-        settings.play();
-    }
+    // if sampler.is_playing() {
+    //     settings.pause();
+    // } else {
+    //     settings.play();
+    // }
 }
