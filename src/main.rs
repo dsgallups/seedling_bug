@@ -5,6 +5,7 @@ use bevy_seedling::{
     SeedlingPlugin,
     node::{FirewheelNode, RegisterNode},
     prelude::AudioEvents,
+    time::Audio,
 };
 use firewheel::{
     channel_config::{ChannelConfig, ChannelCount},
@@ -79,6 +80,7 @@ fn ready_midi_player(
     mut commands: Commands,
     soundfont_assets: Res<Assets<SoundFontAsset>>,
     query: Query<(Entity, &SynthPlayer), (Without<FirewheelNode>, With<SynthCommands>)>,
+    time: Res<Time<Audio>>,
 ) {
     for (entity, soundfont) in &query {
         // Check if soundfont is loaded
@@ -92,7 +94,9 @@ fn ready_midi_player(
 
         // Add the node and its configuration to the entity
         // bevy_seedling will automatically handle node creation and connection
-        commands.entity(entity).insert(node);
+        commands
+            .entity(entity)
+            .insert((node, AudioEvents::new(&time)));
     }
 }
 
